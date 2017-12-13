@@ -157,7 +157,7 @@ public class Login {
                 //  check if were connected
                 if(main.isConnected()){
 //                    main.setLocationRelativeTo(null);
-                    new MainForm().frame.setVisible(true);
+                   main.frame.setVisible(true);
                     frame.setVisible(false);
                 }else {
             	JOptionPane.showMessageDialog(frame, "Wrong at username or password!","Error",JOptionPane.ERROR_MESSAGE);

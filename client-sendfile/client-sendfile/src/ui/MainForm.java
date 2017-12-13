@@ -28,6 +28,9 @@ import javax.swing.JTextPane;
 
 import threads.ClientThread;
 
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 public class MainForm {
 	public String username;
     String password;
@@ -37,10 +40,11 @@ public class MainForm {
     DataOutputStream dos;
     public boolean attachmentOpen = false;
     private boolean isConnected = false;
+    private boolean isOpened = false;
     private String mydownloadfolder = "D:\\";
 	protected JFrame frame;
 	private JTextField textField;
-	private JTextField txtTypeYourGroup;
+	private JTextField txtGroupName;
 	JTextArea jTextPane1;
 	private JTextPane txtpane2;
 	/**
@@ -90,14 +94,30 @@ public class MainForm {
 		frame.getContentPane().add(btnChatWith);
 		
 		JButton btnCreateGroup = new JButton("Create group");
+		btnCreateGroup.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				if (txtGroupName.getText().length() >0){
+					createChatGroup(txtGroupName.getText(), username, socket);
+					if (isOpened){
+						ChatGroup chatGroup = new ChatGroup();
+						chatGroup.init(txtGroupName.getText(), username,socket);
+						chatGroup.frame.setVisible(true);
+						frame.setVisible(false);
+					}
+					else{
+						JOptionPane.showMessageDialog(frame, "Cannot create group","Error",JOptionPane.ERROR_MESSAGE);
+					}
+				}
+			}
+		});
 		btnCreateGroup.setBounds(445, 197, 127, 23);
 		frame.getContentPane().add(btnCreateGroup);
 		
-		txtTypeYourGroup = new JTextField();
-		txtTypeYourGroup.setText("Type group name");
-		txtTypeYourGroup.setBounds(448, 231, 124, 20);
-		frame.getContentPane().add(txtTypeYourGroup);
-		txtTypeYourGroup.setColumns(10);
+		txtGroupName = new JTextField();
+		txtGroupName.setText("Type group name");
+		txtGroupName.setBounds(448, 231, 124, 20);
+		frame.getContentPane().add(txtGroupName);
+		txtGroupName.setColumns(10);
 		
 		JButton btnSend = new JButton("Send");
 		btnSend.setBounds(445, 296, 89, 23);
@@ -159,93 +179,119 @@ public class MainForm {
             appendMessage("[IOException]: "+ e.getMessage(), "Error", Color.RED, Color.RED);
         }
     }
-	 public boolean isConnected(){
+	public boolean isConnected(){
 	        return this.isConnected;
 	    }
- public void appendMessage(String msg, String header, Color headerColor, Color contentColor){
-	 	jTextPane1.setEditable(true);
-        getMsgHeader(header, headerColor);
-        getMsgContent(msg, contentColor);
-        jTextPane1.setEditable(false);
-    }
- public void getMsgHeader(String header, Color color){
-     int len = jTextPane1.getDocument().getLength();
-     jTextPane1.setCaretPosition(len);
-     jTextPane1.replaceSelection(header+":");
- }
- public void getMsgContent(String msg, Color color){
-     int len = jTextPane1.getDocument().getLength();
-     jTextPane1.setCaretPosition(len);
-     jTextPane1.replaceSelection(msg +"\n\n");
- }
- public void appendOnlineList(Vector list){
-     //  showOnLineList(list);  -  Original Method()
-     sampleOnlineList(list);  // - Sample Method()
- }
- private void sampleOnlineList(Vector list){
-     txtpane2.setEditable(true);
-     txtpane2.removeAll();
-     txtpane2.setText("");
-     Iterator i = list.iterator();
-     while(i.hasNext()){
-         Object e = i.next();
-         /*  Show Online Username   */
-         JPanel panel = new JPanel();
-         panel.setLayout(new FlowLayout(FlowLayout.LEFT));
-         panel.setBackground(Color.white);
-         
-         Icon icon = new ImageIcon(this.getClass().getResource("/images/online.png"));
-         JLabel label = new JLabel(icon);
-         label.setText(" "+ e);
-         panel.add(label);
-         int len = txtpane2.getDocument().getLength();
-         txtpane2.setCaretPosition(len);
-         txtpane2.insertComponent(panel);
-         /*  Append Next Line   */
-         sampleAppend();
-     }
-     txtpane2.setEditable(false);
- }
- private void sampleAppend(){
-     int len = txtpane2.getDocument().getLength();
-     txtpane2.setCaretPosition(len);
-     txtpane2.replaceSelection("\n");
- }
- public URL getImageFile(){
+	public boolean isOpened(){
+		return this.isOpened;
+	}
+	public void appendMessage(String msg, String header, Color headerColor, Color contentColor){
+		 	jTextPane1.setEditable(true);
+	        getMsgHeader(header, headerColor);
+	        getMsgContent(msg, contentColor);
+	        jTextPane1.setEditable(false);
+	    }
+	public void getMsgHeader(String header, Color color){
+	     int len = jTextPane1.getDocument().getLength();
+	     jTextPane1.setCaretPosition(len);
+	     jTextPane1.replaceSelection(header+":");
+	 }
+	public void getMsgContent(String msg, Color color){
+	     int len = jTextPane1.getDocument().getLength();
+	     jTextPane1.setCaretPosition(len);
+	     jTextPane1.replaceSelection(msg +"\n\n");
+	 }
+	public void appendOnlineList(Vector list){
+	     //  showOnLineList(list);  -  Original Method()
+	     sampleOnlineList(list);  // - Sample Method()
+	 }
+	private void sampleOnlineList(Vector list){
+	     txtpane2.setEditable(true);
+	     txtpane2.removeAll();
+	     txtpane2.setText("");
+	     Iterator i = list.iterator();
+	     while(i.hasNext()){
+	         Object e = i.next();
+	         /*  Show Online Username   */
+	         JPanel panel = new JPanel();
+	         panel.setLayout(new FlowLayout(FlowLayout.LEFT));
+	         panel.setBackground(Color.white);
+	         
+//	         Icon icon = new ImageIcon(this.getClass().getResource("/images/online.png"));
+	         JLabel label = new JLabel();
+	         label.setText(" "+ e);
+	         panel.add(label);
+	         int len = txtpane2.getDocument().getLength();
+	         txtpane2.setCaretPosition(len);
+	         txtpane2.insertComponent(panel);
+	         /*  Append Next Line   */
+	         sampleAppend();
+	     }
+	     txtpane2.setEditable(false);
+	 }
+	private void sampleAppend(){
+	     int len = txtpane2.getDocument().getLength();
+	     txtpane2.setCaretPosition(len);
+	     txtpane2.replaceSelection("\n");
+	 }
+	public URL getImageFile(){
      URL url = this.getClass().getResource("/images/online.png");
      return url;
  }
- 
- public void showOnLineList(Vector list){
-     try {
-         txtpane2.setEditable(true);
-         txtpane2.setContentType("text/html");
-         StringBuilder sb = new StringBuilder();
-         Iterator it = list.iterator();
-         sb.append("<html><table>");
-         while(it.hasNext()){
-             Object e = it.next();
-             URL url = getImageFile();
-             Icon icon = new ImageIcon(this.getClass().getResource("/images/online.png"));
-             //sb.append("<tr><td><img src='").append(url).append("'></td><td>").append(e).append("</td></tr>");
-             sb.append("<tr><td><b>></b></td><td>").append(e).append("</td></tr>");
-             System.out.println("Online: "+ e);
-         }
-         sb.append("</table></body></html>");
-         txtpane2.removeAll();
-         txtpane2.setText(sb.toString());
-         txtpane2.setEditable(false);
-     } catch (Exception e) {
-         System.out.println(e.getMessage());
-     }
- }
- public void appendMyMessage(String msg, String header){
-        jTextPane1.setEditable(true);
-        getMsgHeader(header, Color.ORANGE);
-        getMsgContent(msg, Color.LIGHT_GRAY);
-        jTextPane1.setEditable(false);
-    }
- public void initFrame(String username,String password, String host, int port,String reg){
+	public void createChatGroup(String groupName,String founder, Socket socket){
+		 try {
+			socket = new Socket(host, port);
+			 dos = new DataOutputStream(socket.getOutputStream());
+		     /** Send our username and password**/
+		     dos.writeUTF("CMD_CREATE_GROUP "+ founder +" " +groupName);
+		     appendMessage(" Connected", "Status", Color.GREEN, Color.GREEN);
+		     appendMessage(" type your message now.!", "Status", Color.GREEN, Color.GREEN);
+		     DataInputStream dis = new DataInputStream(socket.getInputStream());
+		     String str = dis.readUTF();
+		     if (str.compareTo("CMD_CREATE_GROUP_SUCCESS")==0){
+		    	 /** Start Client Thread **/
+		         new Thread(new ClientThread(socket, this)).start();
+		         // were now connected
+		         isOpened = true;
+		     }else {
+		    	 isOpened = false;
+		     }
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	    
+	 }
+	 public void showOnLineList(Vector list){
+	     try {
+	         txtpane2.setEditable(true);
+	         txtpane2.setContentType("text/html");
+	         StringBuilder sb = new StringBuilder();
+	         Iterator it = list.iterator();
+	         sb.append("<html><table>");
+	         while(it.hasNext()){
+	             Object e = it.next();
+	             URL url = getImageFile();
+	             Icon icon = new ImageIcon(this.getClass().getResource("/images/online.png"));
+	             //sb.append("<tr><td><img src='").append(url).append("'></td><td>").append(e).append("</td></tr>");
+	             sb.append("<tr><td><b>></b></td><td>").append(e).append("</td></tr>");
+	             System.out.println("Online: "+ e);
+	         }
+	         sb.append("</table></body></html>");
+	         txtpane2.removeAll();
+	         txtpane2.setText(sb.toString());
+	         txtpane2.setEditable(false);
+	     } catch (Exception e) {
+	         System.out.println(e.getMessage());
+	     }
+	 }
+	 public void appendMyMessage(String msg, String header){
+	        jTextPane1.setEditable(true);
+	        getMsgHeader(header, Color.ORANGE);
+	        getMsgContent(msg, Color.LIGHT_GRAY);
+	        jTextPane1.setEditable(false);
+	    }
+	 public void initFrame(String username,String password, String host, int port,String reg){
 	 this.username = username;
      this.password = password;
      this.host = host;

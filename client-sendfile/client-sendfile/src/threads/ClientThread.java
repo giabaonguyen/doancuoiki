@@ -10,14 +10,16 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import javax.swing.JOptionPane;
 
+import ui.ChatGroup;
 import ui.MainForm;
 
 
 public class ClientThread implements Runnable{
-	 Socket socket;
+	 	Socket socket;
 	    DataInputStream dis;
 	    DataOutputStream dos;
 	    MainForm main;
+	    ChatGroup chatGroup;
 	    StringTokenizer st;
 	    protected DecimalFormat df = new DecimalFormat("##,#00");
 	    
@@ -54,13 +56,23 @@ public class ClientThread implements Runnable{
 	                        Vector online = new Vector();
 	                        while(st.hasMoreTokens()){
 	                            String list = st.nextToken();
-	                            if(!list.equalsIgnoreCase(main.username)){
+//	                            if(!list.equalsIgnoreCase(main.username)){
 	                                online.add(list);
-	                            }
+//	                            }
 	                        }
 	                        main.appendOnlineList(online);
 	                        break;
-
+	                    case "CMD_ADD_SUCCESS":
+	                    	Vector list = new Vector<>();
+	                    	chatGroup = new ChatGroup();
+	        				String groupname = st.nextToken();
+	        				
+	        				while(st.hasMoreTokens()){
+	        					String mem = st.nextToken();
+	        					list.add(mem);
+	        				}
+	        				chatGroup.appendOnlineList(list);
+	                    	break;
 	                    //  This will inform the client that there's a file receive, Accept or Reject the file  
 //	                    case "CMD_FILE_XD":  // Format:  CMD_FILE_XD [sender] [receiver] [filename]
 //	                        String sender = st.nextToken();
@@ -97,9 +109,8 @@ public class ClientThread implements Runnable{
 //	                            }
 //	                        }                       
 //	                        break;   
-		                case "CMD_LOGIN_SUCCESS":
 
-		                	break;
+		                	
 	                    default: 
 	                        main.appendMessage("[CMDException]: Unknown Command "+ CMD, "CMDException", Color.RED, Color.RED);
 	                    break;
