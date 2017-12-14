@@ -114,6 +114,7 @@ public class SocketThread implements Runnable{
 		                main.setGroupMemberList(groupMember1);
 	                	main.appendGroup(groupName,socket);
 	                	Socket gSoc = main.getGroupSocket(groupName);
+	                	customPort++;
 	                	new Thread(new ServerThread(++customPort,main)).start();
 	                	try {
 	                		DataOutputStream dos = new DataOutputStream(gSoc.getOutputStream());
@@ -126,38 +127,65 @@ public class SocketThread implements Runnable{
 	                	break;
 	                case "CMD_ADD_MEMBER":
 	                	String groupName2 =st.nextToken();
-
-
-//	                	Socket soc = main.getGroupSocket(groupName2);
 		                main.appendGroup(groupName2,socket);
 	                	String memList = "";
+	                	boolean success = false;
+		                String groupMember="";
 	                	for (Map.Entry<String,Vector> entry:main.map.entrySet()){
 	                		if (groupName2.equals(entry.getKey())){
 								while (st.hasMoreTokens()){
-									String groupMember = st.nextToken();
-									main.setGroupMemberList(groupMember);
-									memList = memList +" "+entry.getValue().toString();
-									System.out.println("MEM LIST: "+main.map.get(groupName2).toString());
+									groupMember = st.nextToken();
+									for (int i =0;i<main.clientList.size();i++){
+										if(groupMember.compareTo(main.clientList.elementAt(i).toString())==0){
+											main.setGroupMemberList(groupMember);
+											memList = memList +" "+entry.getValue().toString();
+											System.out.println("MEM LIST: "+main.map.get(groupName2).toString());
+											success = true;
+											break;
+										}
+									}
 								}
 
 			                }
 		                }
-	                	DataOutputStream addMem = new DataOutputStream(socket.getOutputStream());
-	                	addMem.writeUTF("CMD_ADD_SUCCESS "+groupName2+" "+memList);
-	                	addMem.flush();
+		                if (success){
+			                DataOutputStream addMem = new DataOutputStream(socket.getOutputStream());
+			                addMem.writeUTF("CMD_ADD_SUCCESS "+groupMember+" "+memList);
+			                addMem.flush();
+
+		                }
+		                else {
+			                DataOutputStream addMem = new DataOutputStream(socket.getOutputStream());
+			                addMem.writeUTF("CMD_ADD_FAIL");
+			                addMem.flush();
+		                }
 	                	break;
 	                case "CMD_CHAT_MEMBER":
 		                String groupName1 = st.nextToken();
-		                Socket socChatMember = main.getGroupSocket(groupName1);
+		                String chatFrom = st.nextToken();
 	                	String msgMem = "";
 	                	while (st.hasMoreTokens()){
 	                		msgMem = msgMem +" "+ st.nextToken();
 		                }
-	                	for (int i = 0;i<main.map.size();i++){
-	                		if (main.map.containsKey(groupName1)){
-								DataOutputStream dos = new DataOutputStream(socChatMember.getOutputStream());
-								dos.writeUTF("CMD_MESSAGE "+msgMem);
-								break;
+	                	for (Map.Entry<String,Vector> entry:main.map.entrySet()) {
+			                if (groupName1.equals(entry.getKey())) {
+				                for (int i = 0; i < main.clientList.size(); i++) {
+				                	for(int j = 0;j<entry.getValue().size();j++){
+				                		if(main.clientList.elementAt(i).toString().compareTo(entry.getValue().elementAt(j).toString())==0)
+						                if (!main.clientList.elementAt(i).equals(chatFrom)) {
+							                try {
+								                Socket tsoc2 = (Socket) main.socketList.elementAt(i);
+								                DataOutputStream dos2 = new DataOutputStream(tsoc2.getOutputStream());
+								                dos2.writeUTF("CMD_CHAT_GROUP " + msgMem);
+								                System.out.println("CMD_MES "+entry.getValue().elementAt(j).toString()+" "+msgMem);
+								                break;
+							                } catch (IOException e) {
+								                main.appendMessage("[CMD_CHAT_MEMBER]: " + e.getMessage());
+							                }
+						                }
+					                }
+
+				                }
 			                }
 		                }
 		                main.appendMessage("[MESSAGE]: From "+msgMem);
